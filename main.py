@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, flash
+from flask import Flask, render_template, request, redirect, flash, abort
+import flask_login
 import pymysql
 from dynaconf import Dynaconf
 
@@ -9,6 +10,41 @@ conf = Dynaconf(
 )
 
 app.secret_key = conf.secret_key
+
+login_manager = flask_login.LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = ("/signin")
+
+class User:
+    is_authenticated = True
+    is_anonymous = False
+    is_active = True
+
+    def __init__(self, user_id, username, email, name):
+        self.id = user_id
+        self.username = username
+        self.email = email
+        self.name = name
+
+    def get_id(self):
+        return str(self.id)
+
+@login_manager.user_loader
+def load_user(user_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute(f"SELECT * FROM `Customer` WHERE `id` = {user_id}; ")
+
+    result = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if result is not None:
+        return User(result["id"], result["username"], result["email"], result["name"])
+    
+
 
 def connect_db():
     conn = pymysql.connect(
@@ -57,14 +93,48 @@ def product_page(product_id):
     cursor.close()
     conn.close()
 
+    if result is None:
+        abort(404)
+
     return render_template("product.html.jinja", product = result)
 
-@app.route("/signin")
+@app.route("/signin", methods=["POST", "GET"])
 def signin():
+    if flask_login.current_user.is_authenticated: 
+        return redirect("/")
+
+    if request.method == "POST":
+        username = request.form["username"].strip()
+        password = request.form["password"]
+
+        conn = connect_db()
+        cursor = conn.cursor()
+
+        cursor.execute(f"SELECT * FROM `Customer` WHERE `username` = '{username}' ;")
+
+        result = cursor.fetchone()
+
+        if result is None:
+            flash("This username/password is incorrect")
+        elif password != result["password"]: 
+            flash("This username/password is incorrect")
+        else:
+            user = User(result["id"], result["username"], result["email"], result["name"])
+            flask_login.login_user(user)
+            return redirect("/")
+
     return render_template("signin.html.jinja")
+
+@app.route('/logout')
+def logout():
+    flask_login.logout_user()
+    return redirect("/signin")
 
 @app.route("/signup", methods=["POST", "GET"])
 def signup():
+    if flask_login.current_user.is_authenticated: 
+        return redirect("/")
+    
     if request.method == "POST":
         name = request.form["name"]
         username = request.form["username"]
@@ -106,3 +176,8 @@ def signup():
     
 
     return render_template("signup.html.jinja")
+
+@app.route("/cart")
+@flask_login.login_required
+def cart():
+    return "Cart Page"
