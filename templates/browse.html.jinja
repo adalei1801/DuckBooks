@@ -10,6 +10,20 @@
     {% include "components/navbar.html.jinja"%}
     <h1 class="my-4 text-center">Swim through our stories!</h1>
 
+    <form class="container" action="/browse">
+      <div class="input-group mb-3">
+        <input
+          type="text"
+          name="query"
+          class="form-control"
+          placeholder="Search..."
+          aria-label="Search"
+        >
+        <button class="btn btn-outline-primary" type="submit">Search</button>
+      </div>
+    </form>
+
+
     <main class="container row g-4 mx-auto">
     {% for item in products %}
       <div class="col-6 col-md-4 col-lg-2">

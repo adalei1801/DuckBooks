@@ -23,7 +23,15 @@
         <p> {{product['description']}} </p>
         <p id="genre"> <b>Genre:</b> {{product['genre']}} </p>
         <p id="page"> <b>Page Count:</b> {{product['page']}} </p>
-        <button class="btn btn-primary">Add to Cart</button>
+
+        <form action="/product/{{product['id']}}/cart" method="post">
+          <div class="mb-3">
+            <label for="quantity" class="form-label h3">Quantity</label>
+            <input type="number" class="form-control" id="quantity" name="quantity" min="1" max="30" value="1">
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg">Add to Cart</button>
+        </form>
+
       </div>
     </div>
 

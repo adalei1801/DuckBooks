@@ -66,11 +66,16 @@ def index():
 
 @app.route("/browse")
 def product_browse():
+    query = request.args.get('query')
+
     conn = connect_db()
 
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM `Product` ;")
+    if query is None:
+        cursor.execute("SELECT * FROM `Product` ;")
+    else:
+        cursor.execute(f"SELECT * FROM `Product` WHERE `title` LIKE '%{query}%' OR `author` LIKE '%{query}%';")
 
     results = cursor.fetchall()
 
@@ -98,6 +103,29 @@ def product_page(product_id):
 
     return render_template("product.html.jinja", product = result)
 
+
+@app.route("/product/<product_id>/cart", methods=["POST"])
+@flask_login.login_required
+def add_to_cart(product_id):
+    customer_id = flask_login.current_user.id
+    quantity = request.form["quantity"]
+    
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute(f"""
+    INSERT INTO `Cart`
+    (`product_id`, `customer_id`, `quantity`)
+    VALUES
+    ({product_id}, {customer_id}, {quantity});
+    """)
+    
+    cursor.close()
+    conn.close
+
+    return redirect("/cart")
+
+
 @app.route("/signin", methods=["POST", "GET"])
 def signin():
     if flask_login.current_user.is_authenticated: 
@@ -122,6 +150,9 @@ def signin():
             user = User(result["id"], result["username"], result["email"], result["name"])
             flask_login.login_user(user)
             return redirect("/")
+        
+        cursor.close()
+        conn.close
 
     return render_template("signin.html.jinja")
 
@@ -180,4 +211,4 @@ def signup():
 @app.route("/cart")
 @flask_login.login_required
 def cart():
-    return "Cart Page"
+    return render_template("cart.html.jinja")
