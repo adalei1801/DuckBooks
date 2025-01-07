@@ -31,7 +31,8 @@
             <img src= "{{item['image']}}" class="card-img-top" alt="{{item['title']}}">
             <div class="card-body">
                 <h5 class="card-title">{{item['title']}}</h5>
-                <p class="card-text">${{item['price']}}</p>
+                <h6 class="card-title">{{item['author']}}</h6>
+                <p class="card-text">${{"%.2f" | format(item['price'])}}</p>
                 <a href="/product/{{item['id']}}" class="btn btn-primary">Read more</a>
             </div>
         </div>

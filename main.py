@@ -60,7 +60,26 @@ def connect_db():
 
 @app.route("/")
 def index():
-    return render_template("homepage.html.jinja")
+    conn = connect_db()
+
+    cursor = conn.cursor()
+
+    cursor.execute(f"SELECT * FROM `Product` WHERE `genre` = 'dystopia';")
+
+    result_dystopia = cursor.fetchall()
+
+    cursor.execute(f"SELECT * FROM `Product` WHERE `genre` LIKE '%fiction';")
+
+    result_fiction = cursor.fetchall()
+
+    cursor.execute(f"SELECT * FROM `Product` WHERE `page` <= '300';")
+
+    result_short = cursor.fetchall()
+
+
+    cursor.close()
+    conn.close()
+    return render_template("homepage.html.jinja", products_dystopia=result_dystopia, products_fiction=result_fiction, products_short=result_short)
 
 
 
@@ -117,7 +136,8 @@ def add_to_cart(product_id):
     INSERT INTO `Cart`
     (`product_id`, `customer_id`, `quantity`)
     VALUES
-    ({product_id}, {customer_id}, {quantity});
+    ({product_id}, {customer_id}, {quantity})
+    ON DUPLICATE KEY UPDATE  `quantity` = `quantity` + {quantity};
     """)
     
     cursor.close()
@@ -231,8 +251,44 @@ def cart():
                         """)
 
     results = cursor.fetchall()
+    price = 0
+
+    for product in results:
+        item_total = product['price'] * product['quantity']
+        price += item_total
 
     cursor.close()
     conn.close()
 
-    return render_template("cart.html.jinja", products=results)
+    return render_template("cart.html.jinja", products=results, price=price)
+
+@app.route("/cart/<cart_id>/delete", methods=["POST"])
+@flask_login.login_required
+def delete(cart_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute(f"DELETE FROM `Cart` WHERE `id`= {cart_id};")
+
+    cursor.close()
+    conn.close()
+
+    return redirect("/cart")
+
+@app.route("/update/<cart_id>//update", methods=["POST"])
+def update(cart_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    quantity = request.form["quantity"]
+
+    cursor.execute(f"""
+                    UPDATE `Cart`
+                    SET `quantity`= {quantity}
+                    WHERE `id` = {cart_id};
+    """)
+
+    cursor.close()
+    conn.close()
+
+    return redirect("/cart")

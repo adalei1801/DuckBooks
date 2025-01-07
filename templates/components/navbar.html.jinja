@@ -14,11 +14,13 @@
           <a class="nav-link active" aria-current="page" href="/">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/browse">Browse</a>
+          <a class="nav-link active" href="/browse">Browse</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/signup">Sign Up</a>
-        </li>
+        {%if not current_user.is_authenticated%}
+          <li class="nav-item active">
+            <a class="nav-link" href="/signup">Sign Up</a>
+          </li>
+        {%endif%}
       </ul>
       <form class="d-flex" role="search" action="/browse">
         <input class="form-control me-2" name="query" type="search" placeholder="Search" aria-label="Search">
@@ -26,7 +28,7 @@
       </form>
 
 
-      <div class=" dropdown mx-4">
+      <div class="dropdown mx-4">
           {%if current_user.is_authenticated%}
             <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-person-circle"> Hi {{current_user.username}}!</i></button>
             <ul class="dropdown-menu">
