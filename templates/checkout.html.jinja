@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Checkout</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+   
+
+</head>
+
+<body>
+    {% include "components/navbar.html.jinja"%}
+    <a href="/cart" class="btn btn-primary my-2 mx-2"><svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" width="21" height="21"><path d="M1.5 7.5l4-4m-4 4l4 4m-4-4H14" stroke="currentColor"></path></svg> Back to Cart</a>
+    <h1 class="my-4 text-center">Checkout</h1>
+
+    <main class="container">
+        <section class="row">
+            <section class="col">
+                <h2 class="my-2">Your Items</h2>
+    
+                <table id="tyler" class="table overflow-scroll">
+                    <thead>
+                        <tr class="fs-4">
+                            <th>Book</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Total</th>
+
+                        </tr>
+                    </thead>
+                    <div>
+                    <tbody>
+                        {% for item in products %}
+                        <tr class="fs-4">
+                            <td class="d-flex">
+                                <img src="{{item['image']}}" alt="{{item['title']}}" width="100">
+                                <div class="mx-3">
+                                    <p class="fw-bold">{{item['title']}}</p>
+                                    <p class="text-secondary fs-5">By {{item['author']}}</p>
+                                </div>
+                            </td>
+                            <td>
+                               <p class="text-center"> {{item['quantity']}} </p>
+                            </td>
+                            <td>{{"%.2f" | format(item["price"])}}</td>
+                            <td>{{ "%.2f" | format(item['price'] * item['quantity']) }}</td>
+
+                        </tr>
+                        {%endfor%}
+                    </tbody>
+                    </div>
+                </table>
+               
+
+                <table class="table">
+                    <tr>
+                        <td class="text-white invisible">Moving the total to the right</td>
+                        <td class="fs-2 text-center"><b>Total:</b> ${{"%.2f" | format(price)}}</td>
+                    </tr>
+                </table>
+            </section>
+
+            <section class="col ms-5">
+                <h2 class="my-2">Information</h2>
+                <form class="h-50">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" id="name" name="name" class="form-control" required
+                            value="{{customer['name']}}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" id="email" name="email" class="form-control" required value="{{customer['email']}}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" class="form-control" required value="{{customer['phone_number']}}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="card_num" class="form-label">Card Number</label>
+                        <input type="text" id="card_num" name="card_num" class="form-control" required value="{{customer['card_number']}}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Street Address</label>
+                        <input type="text" id="address" name="address" class="form-control" required value="{{customer['address']}}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="country" class="form-label">Country</label>
+                        <input type="text" id="country" name="country" class="form-control" required value="{{customer['country']}}">
+                    </div>
+
+
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary">Buy Now</button>
+                    </div>
+                </form>
+            </section>
+        </section>
+
+    </main>
+
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
