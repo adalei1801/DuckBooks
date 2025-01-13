@@ -64,7 +64,7 @@ def index():
 
     cursor = conn.cursor()
 
-    cursor.execute(f"SELECT * FROM `Product` WHERE `genre` = 'dystopia';")
+    cursor.execute(f"SELECT * FROM `Product` WHERE `genre` LIKE 'dystopia%';")
 
     result_dystopia = cursor.fetchall()
 
@@ -114,13 +114,23 @@ def product_page(product_id):
 
     result = cursor.fetchone()
 
+    cursor.execute(f"""
+        SELECT
+            *
+        FROM `Review`     
+        JOIN `Customer` ON `customer_id` = `Customer`.`id`
+                   """)
+    
+    review_results = cursor.fetchall()
+
+
     cursor.close()
     conn.close()
 
     if result is None:
         abort(404)
 
-    return render_template("product.html.jinja", product = result)
+    return render_template("product.html.jinja", product = result, product_review = review_results)
 
 
 @app.route("/product/<product_id>/cart", methods=["POST"])
@@ -275,7 +285,8 @@ def delete(cart_id):
 
     return redirect("/cart")
 
-@app.route("/update/<cart_id>//update", methods=["POST"])
+@app.route("/update/<cart_id>/update", methods=["POST"])
+@flask_login.login_required
 def update(cart_id):
     conn = connect_db()
     cursor = conn.cursor()
@@ -294,6 +305,7 @@ def update(cart_id):
     return redirect("/cart")
 
 @app.route("/checkout")
+@flask_login.login_required
 def checkout():
     conn = connect_db()
     cursor = conn.cursor() 
@@ -338,5 +350,78 @@ def checkout():
     for product in results:
         item_total = product['price'] * product['quantity']
         price += item_total
+    
+    cursor.close()
+    conn.close()
 
     return render_template("checkout.html.jinja", products=results, price=price, customer=results_customer)
+
+@app.route("/cart/buy", methods=["POST"])
+@flask_login.login_required
+def buy():
+    conn = connect_db()
+    cursor = conn.cursor() 
+
+    customer_id = flask_login.current_user.id
+
+    address = request.form["address"]
+    country = request.form["country"]
+
+    cursor.execute(f"""
+        INSERT INTO `Sale`
+            (`customer_id`, `address`, `country`)
+        VALUES
+            ({customer_id}, '{address}', '{country}');
+            """)
+    
+    sale_id = cursor.lastrowid
+    cursor.execute(f"SELECT * FROM `Cart` WHERE `customer_id` = {customer_id}; ")
+
+    results = cursor.fetchall()
+
+    for item in results:
+        cursor.execute(f""" 
+        INSERT INTO `SaleProduct`
+            (`sale_id`, `product_id`, `quantity`)
+        VALUES
+            ({sale_id}, {item['product_id']}, {item['quantity']});
+        """)
+
+
+
+    cursor.execute(f"DELETE FROM `Cart` WHERE `customer_id` = {customer_id};")
+
+    cursor.close()
+    conn.close()
+
+    return redirect("/thankyou")
+
+@app.route("/thankyou")
+@flask_login.login_required
+def thankyou():
+    return render_template("thankyou.html.jinja")
+
+
+@app.route("/product/<product_id>/review", methods=["POST"])
+@flask_login.login_required
+def review(product_id):
+    conn = connect_db()
+    cursor = conn.cursor() 
+
+    customer_id = flask_login.current_user.id
+
+    rating = request.form['rating']
+    comment = request.form['comment']
+
+
+    cursor.execute(f"""
+    INSERT INTO `Review`
+    (`product_id`, `customer_id`, `rating`, `comment`)
+    VALUES
+    ({product_id}, {customer_id}, {rating}, '{comment}');
+    """)
+
+    cursor.close()
+    conn.close()
+
+    return redirect(f"/product/{product_id}")
