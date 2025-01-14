@@ -119,10 +119,25 @@ def product_page(product_id):
             *
         FROM `Review`     
         JOIN `Customer` ON `customer_id` = `Customer`.`id`
+        WHERE `product_id` = {product_id}
                    """)
     
     review_results = cursor.fetchall()
 
+    total = 0
+
+    for review in review_results:
+        rating = review['rating']
+
+        total += rating
+
+    review_num = len(review_results)
+
+
+    try:
+        avg_rate = total / review_num
+    except:
+        avg_rate = 0
 
     cursor.close()
     conn.close()
@@ -130,7 +145,7 @@ def product_page(product_id):
     if result is None:
         abort(404)
 
-    return render_template("product.html.jinja", product = result, product_review = review_results)
+    return render_template("product.html.jinja", product = result, product_review = review_results, review_rate = avg_rate)
 
 
 @app.route("/product/<product_id>/cart", methods=["POST"])
@@ -418,7 +433,8 @@ def review(product_id):
     INSERT INTO `Review`
     (`product_id`, `customer_id`, `rating`, `comment`)
     VALUES
-    ({product_id}, {customer_id}, {rating}, '{comment}');
+    ({product_id}, {customer_id}, {rating}, '{comment}')
+    ON DUPLICATE KEY UPDATE `comment` = '{comment}', `rating` = {rating} ; 
     """)
 
     cursor.close()
