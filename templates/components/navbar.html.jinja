@@ -4,7 +4,8 @@
 
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#">Books for Ducks</a>
+    <img src="/static/books_for_ducks.png" alt="Logo" width="40" height="40" class="d-inline-block align-text-top mx-2">
+    <a class="navbar-brand" href="/">Books for Ducks</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -35,6 +36,7 @@
           {%if current_user.is_authenticated%}
             <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-person-circle"> Hi {{current_user.username}}!</i></button>
             <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="/pastorders">Past Orders</a></li>
               <li><a class="dropdown-item" href="/logout">Logout</a></li>
             </ul>
           {%else %}

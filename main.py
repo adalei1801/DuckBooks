@@ -64,15 +64,15 @@ def index():
 
     cursor = conn.cursor()
 
-    cursor.execute(f"SELECT * FROM `Product` WHERE `genre` LIKE 'dystopia%';")
+    cursor.execute(f"SELECT * FROM `Product` WHERE `genre` LIKE 'dystopia%' ORDER BY `title`;")
 
     result_dystopia = cursor.fetchall()
 
-    cursor.execute(f"SELECT * FROM `Product` WHERE `genre` LIKE '%fiction';")
+    cursor.execute(f"SELECT * FROM `Product` WHERE `genre` LIKE '%fiction' ORDER BY `title`;")
 
     result_fiction = cursor.fetchall()
 
-    cursor.execute(f"SELECT * FROM `Product` WHERE `page` <= '300';")
+    cursor.execute(f"SELECT * FROM `Product` WHERE `page` <= '300' ORDER BY `title`;")
 
     result_short = cursor.fetchall()
 
@@ -92,11 +92,13 @@ def product_browse():
     cursor = conn.cursor()
 
     if query is None:
-        cursor.execute("SELECT * FROM `Product` ;")
+        cursor.execute("SELECT * FROM `Product` ORDER BY `title` ;")
     else:
         cursor.execute(f"SELECT * FROM `Product` WHERE `title` LIKE '%{query}%' OR `author` LIKE '%{query}%';")
 
     results = cursor.fetchall()
+
+
 
     cursor.close()
     conn.close()
@@ -441,3 +443,53 @@ def review(product_id):
     conn.close()
 
     return redirect(f"/product/{product_id}")
+
+@app.route("/pastorders")
+@flask_login.login_required
+def past_orders():
+    conn = connect_db()
+    cursor = conn.cursor() 
+
+    customer_id = flask_login.current_user.id
+
+    cursor.execute(f"""SELECT * FROM `Sale` 
+                        WHERE `customer_id` = {customer_id}  
+                        ORDER BY `timestamp` DESC;""")
+
+    results = cursor.fetchall()
+                   
+    return render_template("pastorders.html.jinja", products=results)
+
+@app.route("/pastorders/<sale_id>")
+@flask_login.login_required
+def ordered_products(sale_id):
+    conn = connect_db()
+    cursor = conn.cursor() 
+
+    cursor.execute(f"SELECT * FROM `Sale` WHERE `id` = {sale_id};")
+
+    sale_result = cursor.fetchone()
+
+    cursor.execute(f""" 
+                    SELECT 
+                        `title`,
+                        `author`,
+                        `price`,
+                        `quantity`,
+                        `image`,
+                        `product_id`,
+                        `SaleProduct`.`id`
+                    FROM `SaleProduct`
+                    JOIN `Product` ON `product_id` = `Product`.`id`
+                    WHERE `sale_id` = {sale_id};
+                        """)
+
+    results = cursor.fetchall()
+
+    price = 0
+    for product in results:
+        item_total = product['price'] * product['quantity']
+        price += item_total
+
+                   
+    return render_template("orderedproducts.html.jinja", products=results, price=price, product_sale = sale_result)
